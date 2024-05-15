@@ -3,10 +3,14 @@ from flask_socketio import SocketIO
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, logger=True, engineio_logger=True)
+socketio = SocketIO(app)
 
 
-HTML_FORM = """
+EXAMPLE_WEBHOOK_STRING = 'my-webhook'
+
+@app.route('/')
+def home():
+    return f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +19,11 @@ HTML_FORM = """
     <title>Webhook Tester</title>
 </head>
 <body>
-    <h1>Enter Webhook Suffix</h1>
+    <h1>Webhook Tester</h1>
+    <p>Enter a URL to create a webhook endpoint.</p>
+    <p>Messages sent to the endpoint will be displayed in the console.</p>
+    <p>Example: using "{EXAMPLE_WEBHOOK_STRING}" will create an API endpoint at "{url_for('api_endpoint', url_string=EXAMPLE_WEBHOOK_STRING, _external=True)}", 
+    and all requests to this API endpoint will be logged at "{url_for('webhook_console', url_string=EXAMPLE_WEBHOOK_STRING, _external=True)}".</p>
     <form action="/create_endpoint" method="post">
         <input type="text" name="url_string" id="url_string" required>
         <button type="submit">Create Webhook Endpoint</button>
@@ -23,10 +31,6 @@ HTML_FORM = """
 </body>
 </html>
 """
-
-@app.route('/')
-def home():
-    return HTML_FORM
 
 @app.route('/create_endpoint', methods=['POST'])
 def create_endpoint():
@@ -61,6 +65,7 @@ def webhook_console(url_string):
                     }}
                 }});
                 socket.on("connect_error", (err) => {{
+                  console.log(`websocket connect_error`);
                   console.log(err.message);
                   console.log(err.description);
                   console.log(err.context);
@@ -70,6 +75,7 @@ def webhook_console(url_string):
     </head>
     <body>
         <h1>Webhook Tester</h1>
+        <p>Messages received on {url_for('api_endpoint', url_string=url_string, _external=True)}</p>
         <ul id="messages"></ul>
     </body>
     </html>
@@ -80,8 +86,8 @@ def api_endpoint(url_string):
     data = request.get_data(as_text=True) or f"No data received. Method: {request.method}"
     message = f"Received: {request.method} /api/{url_string}: {data}"
     socketio.emit('message', {'msg': message, 'url_string': url_string})
-    print(message + f", namespace=/{url_string}")
+    print(message + f", url_string=/{url_string}")
     return jsonify(success=True)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', allow_unsafe_werkzeug=True)
+    socketio.run(app)
