@@ -26,11 +26,12 @@ def home():
 </head>
 <body>
     <h1>Webhook Tester</h1>
-    <p>Enter a URL to create a webhook endpoint.</p>
+    <p>Enter an identifier to create a webhook endpoint.</p>
     <p>Messages sent to the endpoint will be displayed in the console.</p>
-    <p>Example: using "{EXAMPLE_WEBHOOK_STRING}" will create an API endpoint at "{url_for('api_endpoint', url_string=EXAMPLE_WEBHOOK_STRING, _external=True)}", 
+    <p>Example: using "{EXAMPLE_WEBHOOK_STRING}" as the identifier will create an API endpoint at "{url_for('api_endpoint', url_string=EXAMPLE_WEBHOOK_STRING, _external=True)}", 
     and all requests to this API endpoint will be logged at "{url_for('webhook_console', url_string=EXAMPLE_WEBHOOK_STRING, _external=True)}".</p>
     <form action="/create_endpoint" method="post">
+        <label for="url_string">{url_for('api_endpoint', url_string='', _external=True)}</label>
         <input type="text" name="url_string" id="url_string" required>
         <button type="submit">Create Webhook Endpoint</button>
     </form>
