@@ -1,8 +1,14 @@
 from flask import Flask, request, render_template_string, jsonify, url_for, redirect
 from flask_socketio import SocketIO
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+)
+
 socketio = SocketIO(app)
 
 
