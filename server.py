@@ -1,3 +1,4 @@
+import flask_socketio
 from flask import Flask, request, render_template_string, jsonify, url_for, redirect
 from flask_socketio import SocketIO
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -59,7 +60,7 @@ def webhook_console(url_string):
                 console.log('DOM loaded');
                 var socket = io();
                 socket.on('connect', function() {{
-                    socket.emit('join', {{}});
+                    socket.emit('join', {{"url_string": "{url_string}"}});
                     console.log('Websocket connected to server');
                 }});
                 socket.on('message', function(data) {{
@@ -73,6 +74,7 @@ def webhook_console(url_string):
                 }});
                 socket.on("connect_error", (err) => {{
                   console.log(`websocket connect_error`);
+                  console.log(err);
                   console.log(err.message);
                   console.log(err.description);
                   console.log(err.context);
@@ -103,9 +105,14 @@ def webhook_console(url_string):
 def api_endpoint(url_string):
     data = request.get_data(as_text=True) or f"No data received. Method: {request.method}"
     message = f"Received: {request.method} /api/{url_string}: {data}"
-    socketio.emit('message', {'msg': message, 'url_string': url_string})
+    socketio.emit('message', {'msg': message, 'url_string': url_string}, to=url_string)
     print(message + f", url_string=/{url_string}")
     return jsonify(success=True)
+
+@socketio.on('join')
+def on_socket_join_room(data):
+    print(f"client joined room with data = {data}")
+    flask_socketio.join_room(data['url_string'])
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0')
