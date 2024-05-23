@@ -68,6 +68,8 @@ def webhook_console(url_string):
                     console.log('Websocket connected to server');
                 }});
                 socket.on('message', function(data) {{
+                    console.log(data);
+                    
                     // Get the table body element
                     var tableBody = document.getElementById("messageTable").getElementsByTagName("tbody")[0];
                     
@@ -96,6 +98,8 @@ def webhook_console(url_string):
                         var jsonObj = JSON.parse(data.body);
                         pre.appendChild(document.createTextNode(JSON.stringify(jsonObj, null, 2)));
                     }} catch (e) {{
+                        console.log(e);
+                        console.log('Failed to parse JSON, displaying raw text');
                         pre.appendChild(document.createTextNode(data.body));
                     }}
                     bodyCell.appendChild(pre);
