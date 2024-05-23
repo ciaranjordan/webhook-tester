@@ -1,3 +1,4 @@
+import datetime
 import json
 import pprint
 
@@ -67,11 +68,41 @@ def webhook_console(url_string):
                     console.log('Websocket connected to server');
                 }});
                 socket.on('message', function(data) {{
-                    console.log(data.msg);
-                    var node = document.createElement("LI");
-                    var textnode = document.createTextNode(data.msg);
-                    node.appendChild(textnode);
-                    document.getElementById("messages").appendChild(node);
+                    // Get the table body element
+                    var tableBody = document.getElementById("messageTable").getElementsByTagName("tbody")[0];
+                    
+                    // Create a new row
+                    var newRow = document.createElement("TR");
+                    
+                    // Create and append the timestamp cell
+                    var timestampCell = document.createElement("TD");
+                    timestampCell.appendChild(document.createTextNode(data.timestamp));
+                    newRow.appendChild(timestampCell);
+                    
+                    // Create and append the method cell
+                    var methodCell = document.createElement("TD");
+                    methodCell.appendChild(document.createTextNode(data.method));
+                    newRow.appendChild(methodCell);
+                    
+                    // Create and append the URL cell
+                    var urlCell = document.createElement("TD");
+                    urlCell.appendChild(document.createTextNode(data.url));
+                    newRow.appendChild(urlCell);
+                    
+                    // Create and append the body cell
+                    var bodyCell = document.createElement("TD");
+                    var pre = document.createElement("PRE");
+                    try {{
+                        var jsonObj = JSON.parse(data.body);
+                        pre.appendChild(document.createTextNode(JSON.stringify(jsonObj, null, 2)));
+                    }} catch (e) {{
+                        pre.appendChild(document.createTextNode(data.body));
+                    }}
+                    bodyCell.appendChild(pre);
+                    newRow.appendChild(bodyCell);
+                    
+                    // Append the new row to the table body
+                    tableBody.appendChild(newRow);
                 }});
                 socket.on("connect_error", (err) => {{
                   console.log(`websocket connect_error`);
@@ -93,11 +124,37 @@ def webhook_console(url_string):
                 }});
             }});
         </script>
+        <style>
+            table, th, td {{
+                border: 1px solid black;
+                border-collapse: collapse;
+                padding: 4px;
+            }}
+            pre {{
+                font-family: monospace;
+                margin: 0;
+            }}
+            tr:nth-child(even) {{
+                background-color: lightgrey;
+            }}
+        </style>
     </head>
     <body>
         <h1>Webhook Tester</h1>
         <p>Messages received on {url_for('api_endpoint', url_string=url_string, _external=True)}</p>
-        <ul id="messages"></ul>
+        <table id="messageTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Method</th>
+                    <th>URL</th>
+                    <th>Body</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be added here dynamically -->
+            </tbody>
+        </table>
     </body>
     </html>
     """)
@@ -106,8 +163,18 @@ def webhook_console(url_string):
 def api_endpoint(url_string):
     data = request.get_data(as_text=True) or f"No data received. Method: {request.method}"
     message = f"Received: {request.method} /api/{url_string}: {data}"
-    socketio.emit('message', {'msg': message, 'url_string': url_string}, to=url_string)
-    print(message + f", url_string=/{url_string}")
+
+    socket_data = {
+        'msg': message,
+        'timestamp': str(datetime.datetime.now()),
+        'method': request.method,
+        'url': f"/api/{url_string}",
+        'body': request.get_data(as_text=True) or None,
+        'url_string': url_string
+    }
+
+    socketio.emit('message', socket_data, to=url_string)
+    print(f"{socket_data}, url_string=/{url_string}")
     return jsonify(success=True)
 
 @socketio.on('join')
