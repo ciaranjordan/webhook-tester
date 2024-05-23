@@ -1,3 +1,6 @@
+import json
+import pprint
+
 import flask_socketio
 from flask import Flask, request, render_template_string, jsonify, url_for, redirect
 from flask_socketio import SocketIO
@@ -65,12 +68,10 @@ def webhook_console(url_string):
                 }});
                 socket.on('message', function(data) {{
                     console.log(data.msg);
-                    if (data.url_string === "{url_string}") {{
-                        var node = document.createElement("LI");
-                        var textnode = document.createTextNode(data.msg);
-                        node.appendChild(textnode);
-                        document.getElementById("messages").appendChild(node);
-                    }}
+                    var node = document.createElement("LI");
+                    var textnode = document.createTextNode(data.msg);
+                    node.appendChild(textnode);
+                    document.getElementById("messages").appendChild(node);
                 }});
                 socket.on("connect_error", (err) => {{
                   console.log(`websocket connect_error`);
