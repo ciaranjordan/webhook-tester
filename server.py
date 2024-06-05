@@ -91,6 +91,17 @@ def webhook_console(url_string):
                     urlCell.appendChild(document.createTextNode(data.url));
                     newRow.appendChild(urlCell);
                     
+                    // Create and append the headers cell. Headers should be a list of key-value pairs
+                    var headersCell = document.createElement("TD");
+                    var headersList = document.createElement("UL");
+                    for (var key in data.headers) {{
+                        var headerItem = document.createElement("LI");
+                        headerItem.appendChild(document.createTextNode(key + ": " + data.headers[key]));
+                        headersList.appendChild(headerItem);
+                    }}
+                    headersCell.appendChild(headersList);
+                    newRow.appendChild(headersCell);
+                    
                     // Create and append the body cell
                     var bodyCell = document.createElement("TD");
                     var pre = document.createElement("PRE");
@@ -152,6 +163,7 @@ def webhook_console(url_string):
                     <th>Timestamp</th>
                     <th>Method</th>
                     <th>URL</th>
+                    <th>Headers</th>
                     <th>Body</th>
                 </tr>
             </thead>
@@ -174,7 +186,8 @@ def api_endpoint(url_string):
         'method': request.method,
         'url': f"/api/{url_string}",
         'body': request.get_data(as_text=True) or None,
-        'url_string': url_string
+        'url_string': url_string,
+        'headers': dict(request.headers),
     }
 
     socketio.emit('message', socket_data, to=url_string)
