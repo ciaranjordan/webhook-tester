@@ -49,7 +49,7 @@ def create_endpoint():
     url_string = request.form['url_string']
     return redirect(url_for('webhook_console', url_string=url_string))
 
-@app.route('/console/<url_string>')
+@app.route('/console/<path:url_string>')
 def webhook_console(url_string):
     return render_template_string(f"""
     <!DOCTYPE html>
